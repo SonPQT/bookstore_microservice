@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Reviews for {{ book.title }}</h2>
+<div class="box">
+  <p><strong>Book ID:</strong> {{ book.id }}</p>
+  <p><strong>Author:</strong> {{ book.author }}</p>
+  <p><strong>Average rating:</strong> {{ summary.average_rating }}</p>
+  <p><strong>Review count:</strong> {{ summary.review_count }}</p>
+</div>
+{% if message %}
+  <div class="box"><strong>Status:</strong> {{ message.status_code }}<pre>{{ message.data }}</pre></div>
+{% endif %}
+<form method="post">
+  {% csrf_token %}
+  <h3>Add or update review</h3>
+  <select name="customer_id" required>
+    {% for customer in customers %}
+      <option value="{{ customer.id }}">Customer #{{ customer.id }} - {{ customer.name }}</option>
+    {% endfor %}
+  </select><br>
+  <select name="rating" required>
+    <option value="5">5</option>
+    <option value="4">4</option>
+    <option value="3">3</option>
+    <option value="2">2</option>
+    <option value="1">1</option>
+  </select><br>
+  <textarea name="comment" placeholder="Comment"></textarea><br>
+  <button type="submit">Save review</button>
+</form>
+<table>
+  <tr><th>Customer</th><th>Rating</th><th>Comment</th><th>Updated</th></tr>
+  {% for review in reviews %}
+  <tr>
+    <td>{{ review.customer_id }}</td>
+    <td>{{ review.rating }}</td>
+    <td>{{ review.comment }}</td>
+    <td>{{ review.updated_at }}</td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="4">No reviews yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

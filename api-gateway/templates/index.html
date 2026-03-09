@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="box">
+  <h2>Assignment 05 - Stage 3 Ready</h2>
+  <p>Current runnable services:</p>
+  <ul>
+    <li>customer-service</li>
+    <li>book-service</li>
+    <li>cart-service</li>
+    <li>staff-service</li>
+    <li>manager-service</li>
+    <li>order-service</li>
+    <li>catalog-service</li>
+    <li>pay-service</li>
+    <li>ship-service</li>
+    <li>comment-rate-service</li>
+    <li>recommender-ai-service</li>
+    <li>api-gateway</li>
+  </ul>
+  <p>Quick navigation:</p>
+  <ul>
+    <li><a href="/books/">Staff manages books</a></li>
+    <li><a href="/catalog/">Customer browses catalog</a></li>
+    <li><a href="/customers/">Create customers</a></li>
+    <li><span class="code">/cart/1/</span> to manage cart of customer 1</li>
+    <li><span class="code">/orders/1/</span> to create orders for customer 1</li>
+    <li><span class="code">/reviews/1/</span> to review book 1</li>
+    <li><span class="code">/recommendations/1/</span> to get recommendations for customer 1</li>
+    <li><a href="/dashboard/">Manager dashboard</a></li>
+  </ul>
+</div>
+{% endblock %}

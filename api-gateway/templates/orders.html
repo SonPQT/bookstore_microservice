@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Orders of Customer {{ customer_id }}</h2>
+{% if message %}
+  <div class="box"><strong>Status:</strong> {{ message.status_code }}<pre>{{ message.data }}</pre></div>
+{% endif %}
+<div class="box">
+  <h3>Create Order</h3>
+  <p>Current cart items: {{ cart.items|length }}</p>
+  <form method="post">
+    {% csrf_token %}
+    <select name="payment_method" required>
+      <option value="COD">COD</option>
+      <option value="MOMO">MOMO</option>
+      <option value="BANKING">BANKING</option>
+    </select><br>
+    <select name="shipping_method" required>
+      <option value="STANDARD">STANDARD</option>
+      <option value="EXPRESS">EXPRESS</option>
+    </select><br>
+    <input name="shipping_address" placeholder="Shipping address" required><br>
+    <button type="submit">Place Order</button>
+  </form>
+</div>
+<table>
+  <tr><th>Order ID</th><th>Status</th><th>Total</th><th>Payment</th><th>Shipment</th><th>Shipping address</th></tr>
+  {% for order in orders %}
+  <tr>
+    <td>{{ order.id }}</td>
+    <td>{{ order.status }}</td>
+    <td>{{ order.total_amount }}</td>
+    <td>{{ order.payment_method }}{% if order.payment_id %}<br>ID {{ order.payment_id }}{% endif %}</td>
+    <td>{{ order.shipping_method }}{% if order.shipment_id %}<br>ID {{ order.shipment_id }}{% endif %}</td>
+    <td>{{ order.shipping_address }}</td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="6">No orders yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

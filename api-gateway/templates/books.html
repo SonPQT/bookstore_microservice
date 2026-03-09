@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Books</h2>
+{% if message %}
+  <div class="box"><strong>Status:</strong> {{ message.status_code }}<pre>{{ message.data }}</pre></div>
+{% endif %}
+<form method="post">
+  {% csrf_token %}
+  <h3>Add Book (via staff-service)</h3>
+  <input name="title" placeholder="Title" required><br>
+  <input name="author" placeholder="Author" required><br>
+  <input name="price" placeholder="Price" required><br>
+  <input name="stock" placeholder="Stock" required><br>
+  <input name="description" placeholder="Description"><br>
+  <button type="submit">Add Book</button>
+</form>
+<table>
+  <tr><th>ID</th><th>Title</th><th>Author</th><th>Price</th><th>Stock</th><th>Reviews</th></tr>
+  {% for book in books %}
+  <tr>
+    <td>{{ book.id }}</td>
+    <td>{{ book.title }}</td>
+    <td>{{ book.author }}</td>
+    <td>{{ book.price }}</td>
+    <td>{{ book.stock }}</td>
+    <td><a href="/reviews/{{ book.id }}/">Open reviews</a></td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="6">No books yet.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

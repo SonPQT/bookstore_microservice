@@ -1,0 +1,156 @@
+services:
+  customer-service:
+    build: ./customer-service
+    container_name: customer-service
+    environment:
+      CART_SERVICE_URL: http://cart-service:8000
+    ports:
+      - '8001:8000'
+    depends_on:
+      - cart-service
+
+  book-service:
+    build: ./book-service
+    container_name: book-service
+    ports:
+      - '8002:8000'
+
+  cart-service:
+    build: ./cart-service
+    container_name: cart-service
+    environment:
+      BOOK_SERVICE_URL: http://book-service:8000
+    ports:
+      - '8003:8000'
+    depends_on:
+      - book-service
+
+  staff-service:
+    build: ./staff-service
+    container_name: staff-service
+    environment:
+      BOOK_SERVICE_URL: http://book-service:8000
+    ports:
+      - '8004:8000'
+    depends_on:
+      - book-service
+
+  manager-service:
+    build: ./manager-service
+    container_name: manager-service
+    environment:
+      CUSTOMER_SERVICE_URL: http://customer-service:8000
+      BOOK_SERVICE_URL: http://book-service:8000
+      CART_SERVICE_URL: http://cart-service:8000
+      STAFF_SERVICE_URL: http://staff-service:8000
+      ORDER_SERVICE_URL: http://order-service:8000
+      CATALOG_SERVICE_URL: http://catalog-service:8000
+      PAY_SERVICE_URL: http://pay-service:8000
+      SHIP_SERVICE_URL: http://ship-service:8000
+      COMMENT_RATE_SERVICE_URL: http://comment-rate-service:8000
+      RECOMMENDER_SERVICE_URL: http://recommender-ai-service:8000
+    ports:
+      - '8005:8000'
+    depends_on:
+      - customer-service
+      - book-service
+      - cart-service
+      - staff-service
+      - order-service
+      - catalog-service
+      - pay-service
+      - ship-service
+      - comment-rate-service
+      - recommender-ai-service
+
+  order-service:
+    build: ./order-service
+    container_name: order-service
+    environment:
+      BOOK_SERVICE_URL: http://book-service:8000
+      CART_SERVICE_URL: http://cart-service:8000
+      PAY_SERVICE_URL: http://pay-service:8000
+      SHIP_SERVICE_URL: http://ship-service:8000
+    ports:
+      - '8006:8000'
+    depends_on:
+      - book-service
+      - cart-service
+      - pay-service
+      - ship-service
+
+  catalog-service:
+    build: ./catalog-service
+    container_name: catalog-service
+    environment:
+      BOOK_SERVICE_URL: http://book-service:8000
+      COMMENT_RATE_SERVICE_URL: http://comment-rate-service:8000
+    ports:
+      - '8007:8000'
+    depends_on:
+      - book-service
+      - comment-rate-service
+
+  pay-service:
+    build: ./pay-service
+    container_name: pay-service
+    ports:
+      - '8008:8000'
+
+  ship-service:
+    build: ./ship-service
+    container_name: ship-service
+    ports:
+      - '8009:8000'
+
+  comment-rate-service:
+    build: ./comment-rate-service
+    container_name: comment-rate-service
+    environment:
+      BOOK_SERVICE_URL: http://book-service:8000
+      CUSTOMER_SERVICE_URL: http://customer-service:8000
+    ports:
+      - '8010:8000'
+    depends_on:
+      - book-service
+      - customer-service
+
+  recommender-ai-service:
+    build: ./recommender-ai-service
+    container_name: recommender-ai-service
+    environment:
+      BOOK_SERVICE_URL: http://book-service:8000
+      COMMENT_RATE_SERVICE_URL: http://comment-rate-service:8000
+    ports:
+      - '8011:8000'
+    depends_on:
+      - book-service
+      - comment-rate-service
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    environment:
+      CUSTOMER_SERVICE_URL: http://customer-service:8000
+      BOOK_SERVICE_URL: http://book-service:8000
+      CART_SERVICE_URL: http://cart-service:8000
+      STAFF_SERVICE_URL: http://staff-service:8000
+      MANAGER_SERVICE_URL: http://manager-service:8000
+      ORDER_SERVICE_URL: http://order-service:8000
+      CATALOG_SERVICE_URL: http://catalog-service:8000
+      COMMENT_RATE_SERVICE_URL: http://comment-rate-service:8000
+      RECOMMENDER_SERVICE_URL: http://recommender-ai-service:8000
+    ports:
+      - '8000:8000'
+    depends_on:
+      - customer-service
+      - book-service
+      - cart-service
+      - staff-service
+      - manager-service
+      - order-service
+      - catalog-service
+      - comment-rate-service
+      - recommender-ai-service
+
+

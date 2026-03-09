@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Catalog</h2>
+<form method="get">
+  <input name="keyword" placeholder="Keyword" value="{{ params.keyword }}"><br>
+  <input name="author" placeholder="Author" value="{{ params.author }}"><br>
+  <input name="min_price" placeholder="Min price" value="{{ params.min_price }}"><br>
+  <input name="max_price" placeholder="Max price" value="{{ params.max_price }}"><br>
+  <select name="in_stock">
+    <option value="" {% if not params.in_stock %}selected{% endif %}>All stock states</option>
+    <option value="true" {% if params.in_stock == 'true' %}selected{% endif %}>Only in stock</option>
+  </select><br>
+  <select name="sort">
+    <option value="" {% if not params.sort %}selected{% endif %}>Default sort</option>
+    <option value="price_asc" {% if params.sort == 'price_asc' %}selected{% endif %}>Price asc</option>
+    <option value="price_desc" {% if params.sort == 'price_desc' %}selected{% endif %}>Price desc</option>
+    <option value="rating_desc" {% if params.sort == 'rating_desc' %}selected{% endif %}>Rating desc</option>
+  </select><br>
+  <button type="submit">Search catalog</button>
+</form>
+<table>
+  <tr><th>ID</th><th>Title</th><th>Author</th><th>Price</th><th>Stock</th><th>Avg rating</th><th>Reviews</th></tr>
+  {% for book in books %}
+  <tr>
+    <td>{{ book.id }}</td>
+    <td>{{ book.title }}</td>
+    <td>{{ book.author }}</td>
+    <td>{{ book.price }}</td>
+    <td>{{ book.stock }}</td>
+    <td>{{ book.average_rating }}</td>
+    <td>{{ book.review_count }}</td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="7">No books match your filters.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

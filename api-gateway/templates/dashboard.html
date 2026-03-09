@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Manager Dashboard</h2>
+<div class="box">
+  <p>Customers: {{ dashboard.customer_count }}</p>
+  <p>Books: {{ dashboard.book_count }}</p>
+  <p>Orders: {{ dashboard.order_count }}</p>
+  <p>Staff: {{ dashboard.staff_count }}</p>
+  <p>Catalog collections: {{ dashboard.catalog_collection_count }}</p>
+  <p>Payments: {{ dashboard.payment_count }}</p>
+  <p>Shipments: {{ dashboard.shipment_count }}</p>
+  <p>Reviews: {{ dashboard.review_count }}</p>
+  <p>Recommendation requests: {{ dashboard.recommendation_request_count }}</p>
+</div>
+<div class="box">
+  <h3>System Health</h3>
+  <pre>{{ health }}</pre>
+</div>
+<div class="box">
+  <h3>Errors</h3>
+  <pre>{{ dashboard.errors }}</pre>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Cart of Customer {{ customer_id }}</h2>
+{% if message %}
+  <div class="box"><strong>Status:</strong> {{ message.status_code }}<pre>{{ message.data }}</pre></div>
+{% endif %}
+<form method="post">
+  {% csrf_token %}
+  <h3>Add Item</h3>
+  <select name="book_id" required>
+    {% for book in books %}
+      <option value="{{ book.id }}">#{{ book.id }} - {{ book.title }} (stock: {{ book.stock }})</option>
+    {% endfor %}
+  </select><br>
+  <input name="quantity" type="number" min="1" value="1" required><br>
+  <button type="submit">Add To Cart</button>
+</form>
+<p><a href="/orders/{{ customer_id }}/">Create order from this cart</a></p>
+<table>
+  <tr><th>Item ID</th><th>Book ID</th><th>Quantity</th></tr>
+  {% for item in cart.items %}
+  <tr>
+    <td>{{ item.id }}</td>
+    <td>{{ item.book_id }}</td>
+    <td>{{ item.quantity }}</td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="3">Cart is empty.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}
