@@ -1,32 +1,315 @@
 {% extends 'base.html' %}
+{% block title %}Quản lý sách — BookVerse Staff{% endblock %}
+
+{% block extra_css %}
+.staff-banner {
+  background: linear-gradient(135deg, rgba(232,93,93,0.08), rgba(232,93,93,0.02));
+  border: 1px solid rgba(232,93,93,0.15);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--accent-warm);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.add-book-form {
+  background: var(--gradient-card);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+.add-book-form h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+}
+.form-grid .full-width { grid-column: 1 / -1; }
+@media (max-width: 768px) {
+  .form-grid { grid-template-columns: 1fr; }
+}
+
+/* Edit modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.active { display: flex; }
+.modal-card {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  width: 90%;
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+}
+.modal-card h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+}
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--bg-glass);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: var(--radius-sm);
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--text-muted);
+  transition: var(--transition);
+}
+.modal-close:hover { background: var(--bg-glass-hover); color: var(--accent-warm); }
+
+/* Book image thumbnail in table */
+.book-thumb {
+  width: 40px; height: 50px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: var(--surface);
+}
+.book-thumb-placeholder {
+  width: 40px; height: 50px;
+  border-radius: 4px;
+  background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+}
+.genre-tag {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-xl);
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(108,99,255,0.1);
+  color: var(--accent);
+}
+.action-btns {
+  display: flex;
+  gap: 0.4rem;
+}
+{% endblock %}
+
 {% block content %}
-<h2>Books</h2>
+<div class="staff-banner fade-in">
+  🔒 Khu vực dành cho Staff — Quản lý sách
+</div>
+
+<div class="section-header fade-in">
+  <h1 class="section-title">📚 Quản lý sách</h1>
+</div>
+
 {% if message %}
-  <div class="box"><strong>Status:</strong> {{ message.status_code }}<pre>{{ message.data }}</pre></div>
+<div class="alert {% if message.status_code == 201 or message.status_code == 200 %}alert-success{% else %}alert-error{% endif %} fade-in">
+  {% if message.status_code == 201 or message.status_code == 200 %}✅ {{ message.data }}{% else %}⚠️ Lỗi ({{ message.status_code }}): {{ message.data }}{% endif %}
+</div>
 {% endif %}
-<form method="post">
-  {% csrf_token %}
-  <h3>Add Book (via staff-service)</h3>
-  <input name="title" placeholder="Title" required><br>
-  <input name="author" placeholder="Author" required><br>
-  <input name="price" placeholder="Price" required><br>
-  <input name="stock" placeholder="Stock" required><br>
-  <input name="description" placeholder="Description"><br>
-  <button type="submit">Add Book</button>
-</form>
-<table>
-  <tr><th>ID</th><th>Title</th><th>Author</th><th>Price</th><th>Stock</th><th>Reviews</th></tr>
-  {% for book in books %}
-  <tr>
-    <td>{{ book.id }}</td>
-    <td>{{ book.title }}</td>
-    <td>{{ book.author }}</td>
-    <td>{{ book.price }}</td>
-    <td>{{ book.stock }}</td>
-    <td><a href="/reviews/{{ book.id }}/">Open reviews</a></td>
-  </tr>
-  {% empty %}
-  <tr><td colspan="6">No books yet.</td></tr>
-  {% endfor %}
-</table>
+
+<div class="add-book-form fade-in">
+  <h3>➕ Thêm sách mới</h3>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="add">
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Tên sách</label>
+        <input type="text" name="title" class="form-input" placeholder="Clean Code" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tác giả</label>
+        <input type="text" name="author" class="form-input" placeholder="Robert C. Martin" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Thể loại</label>
+        <input type="text" name="genre" class="form-input" placeholder="Lập trình, Tiểu thuyết...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Giá ($)</label>
+        <input type="number" name="price" class="form-input" placeholder="19.99" step="0.01" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Số lượng kho</label>
+        <input type="number" name="stock" class="form-input" placeholder="50" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Link ảnh bìa</label>
+        <input type="url" name="image_url" class="form-input" placeholder="https://example.com/cover.jpg">
+      </div>
+      <div class="form-group full-width">
+        <label class="form-label">Mô tả</label>
+        <input type="text" name="description" class="form-input" placeholder="Mô tả ngắn gọn về cuốn sách...">
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary" style="margin-top:0.75rem">Thêm sách</button>
+  </form>
+</div>
+
+<div class="card fade-in" style="animation-delay:0.1s;padding:0;overflow:hidden">
+  <table class="table-modern">
+    <thead>
+      <tr>
+        <th>Ảnh</th>
+        <th>Tên sách</th>
+        <th>Tác giả</th>
+        <th>Thể loại</th>
+        <th>Giá</th>
+        <th>Kho</th>
+        <th>Hành động</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for book in books %}
+      <tr>
+        <td>
+          {% if book.image_url %}
+          <img src="{{ book.image_url }}" alt="{{ book.title }}" class="book-thumb">
+          {% else %}
+          <div class="book-thumb-placeholder">📖</div>
+          {% endif %}
+        </td>
+        <td style="font-weight:500;color:var(--text-primary)">{{ book.title }}</td>
+        <td>{{ book.author }}</td>
+        <td>
+          {% if book.genre %}
+          <span class="genre-tag">{{ book.genre }}</span>
+          {% else %}
+          <span style="color:var(--text-muted);font-size:0.8rem">—</span>
+          {% endif %}
+        </td>
+        <td style="color:var(--accent-warm);font-weight:600">${{ book.price }}</td>
+        <td>
+          {% if book.stock > 0 %}
+          <span class="badge badge-success">{{ book.stock }}</span>
+          {% else %}
+          <span class="badge badge-danger">Hết</span>
+          {% endif %}
+        </td>
+        <td>
+          <div class="action-btns">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="openEdit({{ book.id }}, '{{ book.title|escapejs }}', '{{ book.author|escapejs }}', '{{ book.description|escapejs }}', '{{ book.genre|escapejs }}', '{{ book.image_url|escapejs }}', '{{ book.price }}', '{{ book.stock }}')">✏️ Sửa</button>
+            <a href="/reviews/{{ book.id }}/" class="btn btn-secondary btn-sm">⭐</a>
+            <form method="post" style="display:inline">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="delete">
+              <input type="hidden" name="book_id" value="{{ book.id }}">
+              <button type="submit" class="btn btn-secondary btn-sm" style="color:var(--accent-warm)" onclick="return confirm('Xóa sách «{{ book.title }}»?')">🗑</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted)">Chưa có sách nào.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-card">
+    <button type="button" class="modal-close" onclick="closeEdit()">✕</button>
+    <h3>✏️ Chỉnh sửa sách</h3>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="edit">
+      <input type="hidden" name="book_id" id="edit-book-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Tên sách</label>
+          <input type="text" name="title" id="edit-title" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tác giả</label>
+          <input type="text" name="author" id="edit-author" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Thể loại</label>
+          <input type="text" name="genre" id="edit-genre" class="form-input" placeholder="Lập trình, Tiểu thuyết...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Giá ($)</label>
+          <input type="number" name="price" id="edit-price" class="form-input" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Số lượng kho</label>
+          <input type="number" name="stock" id="edit-stock" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Link ảnh bìa</label>
+          <input type="url" name="image_url" id="edit-image-url" class="form-input" placeholder="https://example.com/cover.jpg">
+        </div>
+        <div class="form-group full-width">
+          <label class="form-label">Mô tả</label>
+          <input type="text" name="description" id="edit-description" class="form-input">
+        </div>
+      </div>
+      <!-- Image preview -->
+      <div id="edit-image-preview" style="margin-top:0.75rem;display:none">
+        <img id="edit-preview-img" src="" alt="Preview" style="max-height:120px;border-radius:var(--radius-sm);border:1px solid rgba(0,0,0,0.08)">
+      </div>
+      <div style="display:flex;gap:0.75rem;margin-top:1rem">
+        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+        <button type="button" class="btn btn-secondary" onclick="closeEdit()">Hủy</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openEdit(id, title, author, desc, genre, imageUrl, price, stock) {
+  document.getElementById('edit-book-id').value = id;
+  document.getElementById('edit-title').value = title;
+  document.getElementById('edit-author').value = author;
+  document.getElementById('edit-description').value = desc;
+  document.getElementById('edit-genre').value = genre;
+  document.getElementById('edit-image-url').value = imageUrl;
+  document.getElementById('edit-price').value = price;
+  document.getElementById('edit-stock').value = stock;
+  const preview = document.getElementById('edit-image-preview');
+  const previewImg = document.getElementById('edit-preview-img');
+  if (imageUrl) {
+    previewImg.src = imageUrl;
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+  document.getElementById('editModal').classList.add('active');
+}
+function closeEdit() {
+  document.getElementById('editModal').classList.remove('active');
+}
+document.getElementById('editModal').addEventListener('click', function(e) {
+  if (e.target === this) closeEdit();
+});
+document.getElementById('edit-image-url').addEventListener('input', function() {
+  const preview = document.getElementById('edit-image-preview');
+  const previewImg = document.getElementById('edit-preview-img');
+  if (this.value) {
+    previewImg.src = this.value;
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+});
+</script>
 {% endblock %}

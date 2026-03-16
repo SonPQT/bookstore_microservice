@@ -1,40 +1,159 @@
 {% extends 'base.html' %}
+{% block title %}Đơn hàng — BookVerse{% endblock %}
+
+{% block extra_css %}
+.orders-layout {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+.checkout-panel {
+  background: var(--gradient-card);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  position: sticky;
+  top: 80px;
+}
+.checkout-panel h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.checkout-cart-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-glass);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+.checkout-cart-info strong { color: var(--accent-light); }
+
+.order-card {
+  background: var(--gradient-card);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  transition: var(--transition);
+  margin-bottom: 1rem;
+}
+.order-card:hover { border-color: rgba(108,99,255,0.2); }
+.order-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+.order-id { font-weight: 700; font-size: 1rem; }
+.order-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1.5rem;
+  font-size: 0.85rem;
+}
+.order-detail-label { color: var(--text-muted); }
+.order-detail-value { color: var(--text-secondary); font-weight: 500; }
+.order-amount { font-size: 1.15rem; font-weight: 700; color: var(--accent-warm); }
+
+.orders-empty {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-muted);
+}
+.orders-empty-icon { font-size: 3.5rem; margin-bottom: 1rem; display: block; opacity: 0.5; }
+
+@media (max-width: 768px) {
+  .orders-layout { grid-template-columns: 1fr; }
+}
+{% endblock %}
+
 {% block content %}
-<h2>Orders of Customer {{ customer_id }}</h2>
-{% if message %}
-  <div class="box"><strong>Status:</strong> {{ message.status_code }}<pre>{{ message.data }}</pre></div>
-{% endif %}
-<div class="box">
-  <h3>Create Order</h3>
-  <p>Current cart items: {{ cart.items|length }}</p>
-  <form method="post">
-    {% csrf_token %}
-    <select name="payment_method" required>
-      <option value="COD">COD</option>
-      <option value="MOMO">MOMO</option>
-      <option value="BANKING">BANKING</option>
-    </select><br>
-    <select name="shipping_method" required>
-      <option value="STANDARD">STANDARD</option>
-      <option value="EXPRESS">EXPRESS</option>
-    </select><br>
-    <input name="shipping_address" placeholder="Shipping address" required><br>
-    <button type="submit">Place Order</button>
-  </form>
+<div class="section-header fade-in">
+  <div>
+    <h1 class="section-title">📦 Đơn hàng</h1>
+    <p class="section-subtitle">Khách hàng #{{ customer_id }}</p>
+  </div>
 </div>
-<table>
-  <tr><th>Order ID</th><th>Status</th><th>Total</th><th>Payment</th><th>Shipment</th><th>Shipping address</th></tr>
-  {% for order in orders %}
-  <tr>
-    <td>{{ order.id }}</td>
-    <td>{{ order.status }}</td>
-    <td>{{ order.total_amount }}</td>
-    <td>{{ order.payment_method }}{% if order.payment_id %}<br>ID {{ order.payment_id }}{% endif %}</td>
-    <td>{{ order.shipping_method }}{% if order.shipment_id %}<br>ID {{ order.shipment_id }}{% endif %}</td>
-    <td>{{ order.shipping_address }}</td>
-  </tr>
-  {% empty %}
-  <tr><td colspan="6">No orders yet.</td></tr>
-  {% endfor %}
-</table>
+
+{% if message %}
+<div class="alert {% if message.status_code == 201 %}alert-success{% else %}alert-error{% endif %} fade-in">
+  {% if message.status_code == 201 %}
+    ✅ Đặt hàng thành công!
+  {% else %}
+    ⚠️ Lỗi ({{ message.status_code }}): {{ message.data }}
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="orders-layout fade-in" style="animation-delay:0.1s">
+  <!-- CHECKOUT -->
+  <div class="checkout-panel">
+    <h2>🛍️ Đặt hàng mới</h2>
+    <div class="checkout-cart-info">
+      🛒 Giỏ hàng hiện có <strong>{{ cart.items|length|default:"0" }}</strong> sản phẩm
+    </div>
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Phương thức thanh toán</label>
+        <select name="payment_method" class="form-select" required>
+          <option value="COD">💵 COD — Thanh toán khi nhận hàng</option>
+          <option value="MOMO">📱 MOMO — Ví điện tử</option>
+          <option value="BANKING">🏦 BANKING — Chuyển khoản</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phương thức vận chuyển</label>
+        <select name="shipping_method" class="form-select" required>
+          <option value="STANDARD">📦 STANDARD — Giao hàng tiêu chuẩn</option>
+          <option value="EXPRESS">🚀 EXPRESS — Giao hàng nhanh</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Địa chỉ giao hàng</label>
+        <input type="text" name="shipping_address" class="form-input" placeholder="123 Đường ABC, Quận 1, TP.HCM" required>
+      </div>
+      <button type="submit" class="btn btn-warm btn-block" style="margin-top:0.5rem">Đặt hàng ngay</button>
+    </form>
+    <a href="/cart/{{ customer_id }}/" class="btn btn-secondary btn-block" style="margin-top:0.5rem">← Quay lại giỏ hàng</a>
+  </div>
+
+  <!-- ORDER HISTORY -->
+  <div>
+    <h2 style="font-size:1.15rem;font-weight:600;margin-bottom:1rem">📋 Lịch sử đơn hàng</h2>
+    {% if orders %}
+      {% for order in orders %}
+      <div class="order-card">
+        <div class="order-header">
+          <span class="order-id">Đơn #{{ order.id }}</span>
+          <span class="badge {% if order.status == 'COMPLETED' %}badge-success{% elif order.status == 'PENDING' %}badge-warning{% elif order.status == 'CANCELLED' %}badge-danger{% else %}badge-info{% endif %}">
+            {{ order.status }}
+          </span>
+        </div>
+        <div class="order-details">
+          <span class="order-detail-label">Tổng tiền</span>
+          <span class="order-amount">${{ order.total_amount }}</span>
+          <span class="order-detail-label">Thanh toán</span>
+          <span class="order-detail-value">{{ order.payment_method }}{% if order.payment_id %} (#{{ order.payment_id }}){% endif %}</span>
+          <span class="order-detail-label">Vận chuyển</span>
+          <span class="order-detail-value">{{ order.shipping_method }}{% if order.shipment_id %} (#{{ order.shipment_id }}){% endif %}</span>
+          <span class="order-detail-label">Địa chỉ</span>
+          <span class="order-detail-value">{{ order.shipping_address }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="orders-empty">
+        <span class="orders-empty-icon">📭</span>
+        <h3>Chưa có đơn hàng nào</h3>
+        <p>Đặt hàng đầu tiên của bạn ngay!</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

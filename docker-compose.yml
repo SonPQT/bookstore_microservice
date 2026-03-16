@@ -19,6 +19,8 @@ services:
   customer-service:
     build: ./customer-service
     container_name: customer-service
+    volumes:
+      - ./customer-service:/app
     environment:
       CART_SERVICE_URL: http://cart-service:8000
       DB_HOST: postgres-db
@@ -36,6 +38,8 @@ services:
   book-service:
     build: ./book-service
     container_name: book-service
+    volumes:
+      - ./book-service:/app
     environment:
       DB_HOST: postgres-db
       DB_PORT: 5432
@@ -50,6 +54,8 @@ services:
   cart-service:
     build: ./cart-service
     container_name: cart-service
+    volumes:
+      - ./cart-service:/app
     environment:
       BOOK_SERVICE_URL: http://book-service:8000
       DB_HOST: postgres-db
@@ -67,6 +73,8 @@ services:
   staff-service:
     build: ./staff-service
     container_name: staff-service
+    volumes:
+      - ./staff-service:/app
     environment:
       BOOK_SERVICE_URL: http://book-service:8000
       DB_HOST: postgres-db
@@ -84,6 +92,8 @@ services:
   manager-service:
     build: ./manager-service
     container_name: manager-service
+    volumes:
+      - ./manager-service:/app
     environment:
       CUSTOMER_SERVICE_URL: http://customer-service:8000
       BOOK_SERVICE_URL: http://book-service:8000
@@ -128,6 +138,8 @@ services:
   order-service:
     build: ./order-service
     container_name: order-service
+    volumes:
+      - ./order-service:/app
     environment:
       BOOK_SERVICE_URL: http://book-service:8000
       CART_SERVICE_URL: http://cart-service:8000
@@ -154,6 +166,8 @@ services:
   catalog-service:
     build: ./catalog-service
     container_name: catalog-service
+    volumes:
+      - ./catalog-service:/app
     environment:
       BOOK_SERVICE_URL: http://book-service:8000
       COMMENT_RATE_SERVICE_URL: http://comment-rate-service:8000
@@ -174,6 +188,8 @@ services:
   pay-service:
     build: ./pay-service
     container_name: pay-service
+    volumes:
+      - ./pay-service:/app
     environment:
       DB_HOST: postgres-db
       DB_PORT: 5432
@@ -188,6 +204,8 @@ services:
   ship-service:
     build: ./ship-service
     container_name: ship-service
+    volumes:
+      - ./ship-service:/app
     environment:
       DB_HOST: postgres-db
       DB_PORT: 5432
@@ -202,6 +220,8 @@ services:
   comment-rate-service:
     build: ./comment-rate-service
     container_name: comment-rate-service
+    volumes:
+      - ./comment-rate-service:/app
     environment:
       BOOK_SERVICE_URL: http://book-service:8000
       CUSTOMER_SERVICE_URL: http://customer-service:8000
@@ -222,6 +242,8 @@ services:
   recommender-ai-service:
     build: ./recommender-ai-service
     container_name: recommender-ai-service
+    volumes:
+      - ./recommender-ai-service:/app
     environment:
       BOOK_SERVICE_URL: http://book-service:8000
       COMMENT_RATE_SERVICE_URL: http://comment-rate-service:8000

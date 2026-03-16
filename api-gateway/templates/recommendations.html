@@ -1,20 +1,85 @@
 {% extends 'base.html' %}
+{% block title %}Gợi ý cho bạn — BookVerse{% endblock %}
+
+{% block extra_css %}
+.reco-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 2rem;
+  background: var(--gradient-hero);
+  border-radius: var(--radius-xl);
+  position: relative;
+  overflow: hidden;
+}
+.reco-header::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(circle at 50% 50%, rgba(224,64,251,0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+.reco-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+}
+.reco-header p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  position: relative;
+  z-index: 1;
+  margin-top: 0.5rem;
+}
+.reco-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-muted);
+}
+.reco-empty-icon { font-size: 4rem; margin-bottom: 1rem; display: block; opacity: 0.5; }
+{% endblock %}
+
 {% block content %}
-<h2>Recommendations for Customer {{ customer_id }}</h2>
-<table>
-  <tr><th>Book ID</th><th>Title</th><th>Author</th><th>Price</th><th>Stock</th><th>Average rating</th><th>Reviews</th></tr>
+<div class="reco-header fade-in">
+  <h1>🤖 Sách gợi ý cho bạn</h1>
+  <p>Hệ thống AI phân tích sở thích và đề xuất sách phù hợp nhất dành cho Khách hàng #{{ customer_id }}</p>
+</div>
+
+{% if recommendations %}
+<div class="book-grid fade-in" style="animation-delay:0.15s">
   {% for book in recommendations %}
-  <tr>
-    <td>{{ book.id }}</td>
-    <td>{{ book.title }}</td>
-    <td>{{ book.author }}</td>
-    <td>{{ book.price }}</td>
-    <td>{{ book.stock }}</td>
-    <td>{{ book.average_rating }}</td>
-    <td>{{ book.review_count }}</td>
-  </tr>
-  {% empty %}
-  <tr><td colspan="7">No recommendations yet.</td></tr>
+  <a href="/reviews/{{ book.id }}/" class="book-card" style="text-decoration:none">
+    <div class="book-cover{% if book.image_url %} has-image{% endif %}">
+      {% if book.image_url %}
+      <img src="{{ book.image_url }}" alt="{{ book.title }}" class="book-cover-img">
+      {% endif %}
+      {% if book.stock > 0 %}
+      <span class="stock-badge in-stock">Còn hàng</span>
+      {% else %}
+      <span class="stock-badge out-of-stock">Hết hàng</span>
+      {% endif %}
+    </div>
+    <div class="book-info">
+      <div class="book-title">{{ book.title }}</div>
+      <div class="book-author">{{ book.author }}</div>
+      {% if book.genre %}<span class="genre-tag" style="margin-bottom:0.5rem">{{ book.genre }}</span>{% endif %}
+      <div class="book-meta">
+        <span class="book-price">${{ book.price }}</span>
+        {% if book.average_rating %}
+        <span class="book-rating">⭐ {{ book.average_rating }} <span style="color:var(--text-muted);font-size:0.75rem">({{ book.review_count }})</span></span>
+        {% endif %}
+      </div>
+    </div>
+  </a>
   {% endfor %}
-</table>
+</div>
+{% else %}
+<div class="reco-empty fade-in" style="animation-delay:0.15s">
+  <span class="reco-empty-icon">🤖</span>
+  <h3>Chưa có gợi ý nào</h3>
+  <p>Hãy mua sắm và đánh giá sách để hệ thống AI hiểu sở thích của bạn!</p>
+  <a href="/catalog/" class="btn btn-primary" style="margin-top:1rem">📚 Khám phá danh mục</a>
+</div>
+{% endif %}
 {% endblock %}

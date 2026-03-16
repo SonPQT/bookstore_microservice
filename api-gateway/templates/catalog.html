@@ -1,37 +1,142 @@
 {% extends 'base.html' %}
+{% block title %}Danh mục sách — BookVerse{% endblock %}
+
+{% block extra_css %}
+.catalog-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+.filter-panel {
+  background: var(--gradient-card);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  position: sticky;
+  top: 80px;
+}
+.filter-panel h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.filter-divider {
+  border: none;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  margin: 1rem 0;
+}
+.result-count {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+.catalog-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-muted);
+}
+.catalog-empty-icon { font-size: 4rem; margin-bottom: 1rem; display: block; opacity: 0.5; }
+@media (max-width: 768px) {
+  .catalog-layout { grid-template-columns: 1fr; }
+  .filter-panel { position: static; }
+}
+{% endblock %}
+
 {% block content %}
-<h2>Catalog</h2>
-<form method="get">
-  <input name="keyword" placeholder="Keyword" value="{{ params.keyword }}"><br>
-  <input name="author" placeholder="Author" value="{{ params.author }}"><br>
-  <input name="min_price" placeholder="Min price" value="{{ params.min_price }}"><br>
-  <input name="max_price" placeholder="Max price" value="{{ params.max_price }}"><br>
-  <select name="in_stock">
-    <option value="" {% if not params.in_stock %}selected{% endif %}>All stock states</option>
-    <option value="true" {% if params.in_stock == 'true' %}selected{% endif %}>Only in stock</option>
-  </select><br>
-  <select name="sort">
-    <option value="" {% if not params.sort %}selected{% endif %}>Default sort</option>
-    <option value="price_asc" {% if params.sort == 'price_asc' %}selected{% endif %}>Price asc</option>
-    <option value="price_desc" {% if params.sort == 'price_desc' %}selected{% endif %}>Price desc</option>
-    <option value="rating_desc" {% if params.sort == 'rating_desc' %}selected{% endif %}>Rating desc</option>
-  </select><br>
-  <button type="submit">Search catalog</button>
-</form>
-<table>
-  <tr><th>ID</th><th>Title</th><th>Author</th><th>Price</th><th>Stock</th><th>Avg rating</th><th>Reviews</th></tr>
-  {% for book in books %}
-  <tr>
-    <td>{{ book.id }}</td>
-    <td>{{ book.title }}</td>
-    <td>{{ book.author }}</td>
-    <td>{{ book.price }}</td>
-    <td>{{ book.stock }}</td>
-    <td>{{ book.average_rating }}</td>
-    <td>{{ book.review_count }}</td>
-  </tr>
-  {% empty %}
-  <tr><td colspan="7">No books match your filters.</td></tr>
-  {% endfor %}
-</table>
+<div class="section-header fade-in">
+  <div>
+    <h1 class="section-title">📚 Danh mục sách</h1>
+    <p class="section-subtitle">Tìm kiếm và khám phá sách yêu thích</p>
+  </div>
+  <span class="result-count">{{ books|length }} kết quả</span>
+</div>
+
+<div class="catalog-layout fade-in" style="animation-delay:0.1s">
+  <!-- FILTERS -->
+  <aside class="filter-panel">
+    <h3>🔍 Bộ lọc</h3>
+    <form method="get">
+      <div class="form-group">
+        <label class="form-label">Từ khóa</label>
+        <input type="text" name="keyword" class="form-input" placeholder="Tên sách, mô tả..." value="{{ params.keyword }}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tác giả</label>
+        <input type="text" name="author" class="form-input" placeholder="Tên tác giả" value="{{ params.author }}">
+      </div>
+      <hr class="filter-divider">
+      <div class="form-group">
+        <label class="form-label">Giá từ</label>
+        <input type="number" name="min_price" class="form-input" placeholder="0" value="{{ params.min_price }}" step="0.01">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Giá đến</label>
+        <input type="number" name="max_price" class="form-input" placeholder="999" value="{{ params.max_price }}" step="0.01">
+      </div>
+      <hr class="filter-divider">
+      <div class="form-group">
+        <label class="form-label">Tình trạng</label>
+        <select name="in_stock" class="form-select">
+          <option value="" {% if not params.in_stock %}selected{% endif %}>Tất cả</option>
+          <option value="true" {% if params.in_stock == 'true' %}selected{% endif %}>Còn hàng</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sắp xếp</label>
+        <select name="sort" class="form-select">
+          <option value="" {% if not params.sort %}selected{% endif %}>Mặc định</option>
+          <option value="price_asc" {% if params.sort == 'price_asc' %}selected{% endif %}>Giá tăng dần</option>
+          <option value="price_desc" {% if params.sort == 'price_desc' %}selected{% endif %}>Giá giảm dần</option>
+          <option value="rating_desc" {% if params.sort == 'rating_desc' %}selected{% endif %}>Đánh giá cao</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" style="margin-top:0.5rem">Tìm kiếm</button>
+    </form>
+  </aside>
+
+  <!-- BOOK GRID -->
+  <div>
+    {% if books %}
+    <div class="book-grid">
+      {% for book in books %}
+      <a href="/reviews/{{ book.id }}/" class="book-card" style="text-decoration:none">
+        <div class="book-cover{% if book.image_url %} has-image{% endif %}">
+          {% if book.image_url %}
+          <img src="{{ book.image_url }}" alt="{{ book.title }}" class="book-cover-img">
+          {% endif %}
+          {% if book.stock > 0 %}
+          <span class="stock-badge in-stock">Còn hàng</span>
+          {% else %}
+          <span class="stock-badge out-of-stock">Hết hàng</span>
+          {% endif %}
+        </div>
+        <div class="book-info">
+          <div class="book-title">{{ book.title }}</div>
+          <div class="book-author">{{ book.author }}</div>
+          {% if book.genre %}<span class="genre-tag" style="margin-bottom:0.5rem">{{ book.genre }}</span>{% endif %}
+          <div class="book-meta">
+            <span class="book-price">${{ book.price }}</span>
+            {% if book.average_rating %}
+            <span class="book-rating">⭐ {{ book.average_rating }} <span style="color:var(--text-muted);font-size:0.75rem">({{ book.review_count }})</span></span>
+            {% else %}
+            <span class="book-rating" style="color:var(--text-muted)">Chưa đánh giá</span>
+            {% endif %}
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="catalog-empty">
+      <span class="catalog-empty-icon">📭</span>
+      <h3>Không tìm thấy sách nào</h3>
+      <p>Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

@@ -363,38 +363,9 @@ The catalog-service is responsible for catalog management.
 
 ---
 
-### 9.1. Create Catalog
-- **Method:** `POST`
-- **URL:** `/catalogs/`
-- **Description:** Create a new catalog and initialize a cart for them.
-- **Request Body:**
-```json
-{
-    "name": "John Doe",
-    "email": "[EMAIL_ADDRESS]"
-}
-```
-- **Response:**
-```json
-{
-    "message": "Customer created and cart initialized successfully.",
-    "customer": {
-        "id": 1,
-        "name": "John Doe",
-        "email": "[EMAIL_ADDRESS]",
-        "created_at": "2022-01-01T00:00:00Z"
-    },
-    "cart": {
-        "id": 1,
-        "customer_id": 1,
-        "items": [],
-        "created_at": "2022-01-01T00:00:00Z"
-    }
-}
-```
-### 9.2. List Catalogs
+### 9.1. List Catalogs
 - **Method:** `GET`
-- **URL:** `/catalogs/`
+- **URL:** `/catalog/books/`
 - **Description:** List all catalogs.
 
 #### Success Response
@@ -421,10 +392,10 @@ The pay-service is responsible for pay management.
 
 ---
 
-### 10.1. Create Pay
+### 10.1. Create Payment
 - **Method:** `POST`
-- **URL:** `/pays/`
-- **Description:** Create a new pay and initialize a cart for them.
+- **URL:** `/payments/`
+- **Description:** Create a new payment and initialize a cart for them.
 - **Request Body:**
 ```json
 {
@@ -450,10 +421,10 @@ The pay-service is responsible for pay management.
     }
 }
 ```
-### 10.2. List Pays
+### 10.2. List Payments
 - **Method:** `GET`
-- **URL:** `/pays/`
-- **Description:** List all pays.
+- **URL:** `/payments/`
+- **Description:** List all payments.
 
 #### Success Response
 

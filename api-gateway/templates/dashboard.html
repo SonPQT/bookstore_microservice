@@ -1,23 +1,130 @@
 {% extends 'base.html' %}
+{% block title %}Dashboard — BookVerse Manager{% endblock %}
+
+{% block extra_css %}
+.staff-banner {
+  background: linear-gradient(135deg, rgba(255,107,107,0.1), rgba(255,107,107,0.02));
+  border: 1px solid rgba(255,107,107,0.2);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--accent-warm);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.stat-card {
+  background: var(--gradient-card);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  transition: var(--transition);
+}
+.stat-card:hover {
+  border-color: rgba(108,99,255,0.3);
+  transform: translateY(-2px);
+}
+.stat-icon { font-size: 1.75rem; margin-bottom: 0.75rem; display: block; }
+.stat-value { font-size: 1.75rem; font-weight: 800; color: var(--text-primary); }
+.stat-label { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+.health-card {
+  background: var(--gradient-card);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.health-card h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+.health-card pre {
+  background: var(--bg-glass);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+{% endblock %}
+
 {% block content %}
-<h2>Manager Dashboard</h2>
-<div class="box">
-  <p>Customers: {{ dashboard.customer_count }}</p>
-  <p>Books: {{ dashboard.book_count }}</p>
-  <p>Orders: {{ dashboard.order_count }}</p>
-  <p>Staff: {{ dashboard.staff_count }}</p>
-  <p>Catalog collections: {{ dashboard.catalog_collection_count }}</p>
-  <p>Payments: {{ dashboard.payment_count }}</p>
-  <p>Shipments: {{ dashboard.shipment_count }}</p>
-  <p>Reviews: {{ dashboard.review_count }}</p>
-  <p>Recommendation requests: {{ dashboard.recommendation_request_count }}</p>
+<div class="staff-banner fade-in">
+  🔒 Khu vực dành cho Manager — Bảng điều khiển
 </div>
-<div class="box">
-  <h3>System Health</h3>
+
+<div class="section-header fade-in">
+  <h1 class="section-title">📊 Bảng điều khiển</h1>
+</div>
+
+<div class="stats-grid fade-in" style="animation-delay:0.1s">
+  <div class="stat-card">
+    <span class="stat-icon">👥</span>
+    <div class="stat-value">{{ dashboard.customer_count|default:"—" }}</div>
+    <div class="stat-label">Khách hàng</div>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">📚</span>
+    <div class="stat-value">{{ dashboard.book_count|default:"—" }}</div>
+    <div class="stat-label">Sách</div>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">📦</span>
+    <div class="stat-value">{{ dashboard.order_count|default:"—" }}</div>
+    <div class="stat-label">Đơn hàng</div>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">👔</span>
+    <div class="stat-value">{{ dashboard.staff_count|default:"—" }}</div>
+    <div class="stat-label">Nhân viên</div>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">📂</span>
+    <div class="stat-value">{{ dashboard.catalog_collection_count|default:"—" }}</div>
+    <div class="stat-label">Bộ sưu tập</div>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">💳</span>
+    <div class="stat-value">{{ dashboard.payment_count|default:"—" }}</div>
+    <div class="stat-label">Thanh toán</div>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">🚚</span>
+    <div class="stat-value">{{ dashboard.shipment_count|default:"—" }}</div>
+    <div class="stat-label">Vận chuyển</div>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">⭐</span>
+    <div class="stat-value">{{ dashboard.review_count|default:"—" }}</div>
+    <div class="stat-label">Đánh giá</div>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">🤖</span>
+    <div class="stat-value">{{ dashboard.recommendation_request_count|default:"—" }}</div>
+    <div class="stat-label">Gợi ý AI</div>
+  </div>
+</div>
+
+<div class="health-card fade-in" style="animation-delay:0.2s">
+  <h3>🏥 System Health</h3>
   <pre>{{ health }}</pre>
 </div>
-<div class="box">
-  <h3>Errors</h3>
-  <pre>{{ dashboard.errors }}</pre>
+
+{% if dashboard.errors %}
+<div class="health-card fade-in" style="animation-delay:0.3s">
+  <h3>⚠️ Errors</h3>
+  <pre style="color:var(--accent-warm)">{{ dashboard.errors }}</pre>
 </div>
+{% endif %}
 {% endblock %}

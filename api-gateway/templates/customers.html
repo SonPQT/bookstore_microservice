@@ -1,29 +1,198 @@
 {% extends 'base.html' %}
+{% block title %}Đăng nhập — BookVerse{% endblock %}
+
+{% block extra_css %}
+.auth-container {
+  max-width: 480px;
+  margin: 2rem auto;
+}
+.auth-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.auth-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.auth-header p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+.auth-card {
+  background: var(--gradient-card);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+}
+.auth-card h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.divider-text {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin: 1.5rem 0;
+  position: relative;
+}
+.divider-text::before, .divider-text::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: rgba(0,0,0,0.06);
+}
+.divider-text::before { left: 0; }
+.divider-text::after { right: 0; }
+
+.password-toggle {
+  position: relative;
+}
+.password-toggle .toggle-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0.25rem;
+  transition: var(--transition);
+}
+.password-toggle .toggle-btn:hover { color: var(--accent-light); }
+
+.logged-in-card {
+  text-align: center;
+  padding: 2rem;
+}
+.logged-in-avatar {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: var(--gradient-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 1rem;
+}
+.logged-in-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.logged-in-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
+}
+{% endblock %}
+
 {% block content %}
-<h2>Customers</h2>
-{% if message %}
-  <div class="box"><strong>Status:</strong> {{ message.status_code }}<pre>{{ message.data }}</pre></div>
-{% endif %}
-<form method="post">
-  {% csrf_token %}
-  <h3>Create Customer</h3>
-  <input name="name" placeholder="Name" required><br>
-  <input name="email" placeholder="Email" required><br>
-  <button type="submit">Create Customer</button>
-</form>
-<table>
-  <tr><th>ID</th><th>Name</th><th>Email</th><th>Cart</th><th>Orders</th><th>Recommendations</th></tr>
-  {% for customer in customers %}
-  <tr>
-    <td>{{ customer.id }}</td>
-    <td>{{ customer.name }}</td>
-    <td>{{ customer.email }}</td>
-    <td><a href="/cart/{{ customer.id }}/">Open Cart</a></td>
-    <td><a href="/orders/{{ customer.id }}/">View Orders</a></td>
-    <td><a href="/recommendations/{{ customer.id }}/">Suggest books</a></td>
-  </tr>
-  {% empty %}
-  <tr><td colspan="6">No customers yet.</td></tr>
-  {% endfor %}
-</table>
+<div class="auth-container fade-in">
+  <div class="auth-header">
+    <h1>👋 Chào mừng đến BookVerse</h1>
+    <p>Đăng nhập để mua sách, quản lý giỏ hàng và theo dõi đơn hàng.</p>
+  </div>
+
+  {% if message %}
+  <div class="alert {% if message.status_code == 201 or message.status_code == 200 %}alert-success{% else %}alert-error{% endif %}">
+    {% if message.status_code == 201 %}
+      ✅ Tạo tài khoản thành công! Bạn có thể đăng nhập bên dưới.
+    {% elif message.status_code == 200 %}
+      ✅ Đăng nhập thành công!
+    {% else %}
+      ⚠️ {{ message.data.error|default:message.data }}
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if customer_id %}
+  <!-- LOGGED IN STATE -->
+  <div class="auth-card logged-in-card">
+    <div class="logged-in-avatar">{{ customer_name|truncatechars:1 }}</div>
+    <div class="logged-in-name">{{ customer_name }}</div>
+    <p style="color:var(--text-muted);font-size:0.9rem">Bạn đã đăng nhập thành công</p>
+    <div class="logged-in-actions">
+      <a href="/catalog/" class="btn btn-primary">📚 Xem sách</a>
+      <a href="/cart/{{ customer_id }}/" class="btn btn-secondary">🛒 Giỏ hàng</a>
+      <a href="/logout/" class="btn btn-secondary" style="border-color:rgba(255,107,107,0.3);color:var(--accent-warm)">Đăng xuất</a>
+    </div>
+  </div>
+
+  {% else %}
+  <!-- LOGIN FORM -->
+  <div class="auth-card">
+    <h2>🔑 Đăng nhập</h2>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="login">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" name="email" class="form-input" placeholder="[email protected]" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mật khẩu</label>
+        <div class="password-toggle">
+          <input type="password" name="password" id="login-password" class="form-input" placeholder="Nhập mật khẩu..." required>
+          <button type="button" class="toggle-btn" onclick="togglePassword('login-password', this)">👁️</button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" style="margin-top:0.5rem">Đăng nhập</button>
+    </form>
+  </div>
+
+  <div class="divider-text">hoặc tạo tài khoản mới</div>
+
+  <!-- REGISTER FORM -->
+  <div class="auth-card">
+    <h2>✨ Đăng ký mới</h2>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="register">
+      <div class="form-group">
+        <label class="form-label">Họ và tên</label>
+        <input type="text" name="name" class="form-input" placeholder="Nguyễn Văn A" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" name="email" class="form-input" placeholder="[email protected]" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mật khẩu</label>
+        <div class="password-toggle">
+          <input type="password" name="password" id="register-password" class="form-input" placeholder="Tạo mật khẩu..." required>
+          <button type="button" class="toggle-btn" onclick="togglePassword('register-password', this)">👁️</button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" style="margin-top:0.5rem">Tạo tài khoản</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function togglePassword(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁️';
+  }
+}
+</script>
 {% endblock %}

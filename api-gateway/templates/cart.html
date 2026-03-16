@@ -1,31 +1,246 @@
 {% extends 'base.html' %}
+{% block title %}Giỏ hàng — BookVerse{% endblock %}
+
+{% block extra_css %}
+.cart-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 2rem;
+  align-items: start;
+}
+.cart-items { display: flex; flex-direction: column; gap: 1rem; }
+.cart-item {
+  background: var(--gradient-card);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: var(--transition);
+}
+.cart-item:hover { border-color: rgba(108,99,255,0.2); }
+.cart-item-cover {
+  width: 64px; height: 80px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+.cart-item-info { flex: 1; min-width: 0; }
+.cart-item-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.2rem; }
+.cart-item-detail { color: var(--text-muted); font-size: 0.85rem; }
+.cart-item-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+.qty-form {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.qty-btn {
+  width: 30px; height: 30px;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: var(--radius-sm);
+  background: var(--bg-glass);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: var(--transition);
+}
+.qty-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.qty-display {
+  min-width: 36px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--accent-light);
+}
+.delete-btn {
+  width: 30px; height: 30px;
+  border: 1px solid rgba(255,107,107,0.2);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--accent-warm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  transition: var(--transition);
+  margin-left: 0.5rem;
+}
+.delete-btn:hover { background: rgba(255,107,107,0.15); border-color: rgba(255,107,107,0.4); }
+
+.cart-summary {
+  background: var(--gradient-card);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  position: sticky;
+  top: 80px;
+}
+.cart-summary h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+.summary-row.total {
+  border-top: 1px solid rgba(0,0,0,0.08);
+  margin-top: 0.75rem;
+  padding-top: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.cart-empty {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-muted);
+}
+.cart-empty-icon { font-size: 3.5rem; margin-bottom: 1rem; display: block; opacity: 0.5; }
+
+.cart-top-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .cart-layout { grid-template-columns: 1fr; }
+  .cart-item { flex-wrap: wrap; }
+}
+{% endblock %}
+
 {% block content %}
-<h2>Cart of Customer {{ customer_id }}</h2>
+<div class="section-header fade-in">
+  <div>
+    <h1 class="section-title">🛒 Giỏ hàng</h1>
+    <p class="section-subtitle">Khách hàng #{{ customer_id }}</p>
+  </div>
+</div>
+
 {% if message %}
-  <div class="box"><strong>Status:</strong> {{ message.status_code }}<pre>{{ message.data }}</pre></div>
+<div class="alert {% if message.status_code == 200 or message.status_code == 201 %}alert-success{% else %}alert-error{% endif %} fade-in">
+  {% if message.status_code == 200 or message.status_code == 201 %}✅ {{ message.data }}{% else %}⚠️ Lỗi: {{ message.data }}{% endif %}
+</div>
 {% endif %}
-<form method="post">
-  {% csrf_token %}
-  <h3>Add Item</h3>
-  <select name="book_id" required>
-    {% for book in books %}
-      <option value="{{ book.id }}">#{{ book.id }} - {{ book.title }} (stock: {{ book.stock }})</option>
-    {% endfor %}
-  </select><br>
-  <input name="quantity" type="number" min="1" value="1" required><br>
-  <button type="submit">Add To Cart</button>
-</form>
-<p><a href="/orders/{{ customer_id }}/">Create order from this cart</a></p>
-<table>
-  <tr><th>Item ID</th><th>Book ID</th><th>Quantity</th></tr>
-  {% for item in cart.items %}
-  <tr>
-    <td>{{ item.id }}</td>
-    <td>{{ item.book_id }}</td>
-    <td>{{ item.quantity }}</td>
-  </tr>
-  {% empty %}
-  <tr><td colspan="3">Cart is empty.</td></tr>
-  {% endfor %}
-</table>
+
+<div class="cart-layout fade-in" style="animation-delay:0.1s">
+  <!-- ITEMS -->
+  <div class="cart-items">
+    {% if cart.items %}
+      {% for item in cart.items %}
+      <div class="cart-item">
+        <div class="cart-item-cover">📖</div>
+        <div class="cart-item-info">
+          <div class="cart-item-title">
+            {% if book_map %}
+              {% for bid, bdata in book_map.items %}
+                {% if bid == item.book_id %}{{ bdata.title }}{% endif %}
+              {% endfor %}
+            {% else %}
+              Sách #{{ item.book_id }}
+            {% endif %}
+          </div>
+          <div class="cart-item-detail">Mã sách: #{{ item.book_id }}</div>
+        </div>
+        <div class="cart-item-controls">
+          <!-- Decrease quantity -->
+          {% if item.quantity > 1 %}
+          <form method="post" style="display:inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_qty">
+            <input type="hidden" name="item_id" value="{{ item.id }}">
+            <input type="hidden" name="quantity" value="{{ item.quantity|add:'-1' }}">
+            <button type="submit" class="qty-btn" title="Giảm">−</button>
+          </form>
+          {% else %}
+          <span class="qty-btn" style="opacity:0.3;cursor:default">−</span>
+          {% endif %}
+
+          <span class="qty-display">{{ item.quantity }}</span>
+
+          <!-- Increase quantity -->
+          <form method="post" style="display:inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_qty">
+            <input type="hidden" name="item_id" value="{{ item.id }}">
+            <input type="hidden" name="quantity" value="{{ item.quantity|add:'1' }}">
+            <button type="submit" class="qty-btn" title="Tăng">+</button>
+          </form>
+
+          <!-- Delete item -->
+          <form method="post" style="display:inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete_item">
+            <input type="hidden" name="item_id" value="{{ item.id }}">
+            <button type="submit" class="delete-btn" title="Xóa" onclick="return confirm('Xóa sản phẩm này?')">🗑</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+
+      <!-- Clear cart -->
+      <form method="post" style="text-align:right;margin-top:0.5rem">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="clear_cart">
+        <button type="submit" class="btn btn-secondary btn-sm" style="border-color:rgba(255,107,107,0.2);color:var(--accent-warm)" onclick="return confirm('Xóa tất cả sản phẩm trong giỏ hàng?')">
+          🗑 Xóa toàn bộ giỏ hàng
+        </button>
+      </form>
+    {% else %}
+      <div class="cart-empty">
+        <span class="cart-empty-icon">🛒</span>
+        <h3>Giỏ hàng trống</h3>
+        <p>Hãy vào danh mục để tìm sách yêu thích!</p>
+        <a href="/catalog/" class="btn btn-primary" style="margin-top:1rem">📚 Xem danh mục</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="cart-summary">
+    <h3>📋 Tóm tắt đơn hàng</h3>
+    <div class="summary-row">
+      <span>Loại sản phẩm</span>
+      <span>{{ cart.items|length|default:"0" }}</span>
+    </div>
+    {% with total_qty=0 %}
+    <div class="summary-row total">
+      <span>Tổng số lượng</span>
+      <span>
+        {% for item in cart.items %}{% if forloop.last %}{{ item.quantity }}{% endif %}{% empty %}0{% endfor %} sản phẩm
+      </span>
+    </div>
+    {% endwith %}
+    {% if cart.items %}
+    <a href="/orders/{{ customer_id }}/" class="btn btn-warm btn-block" style="margin-top:1.25rem">
+      🛍️ Tiến hành đặt hàng
+    </a>
+    {% endif %}
+    <a href="/catalog/" class="btn btn-secondary btn-block" style="margin-top:0.5rem">
+      ← Tiếp tục mua sắm
+    </a>
+  </div>
+</div>
 {% endblock %}

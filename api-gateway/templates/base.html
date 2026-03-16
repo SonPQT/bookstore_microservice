@@ -1,32 +1,522 @@
 <!doctype html>
-<html>
+<html lang="vi">
 <head>
   <meta charset="utf-8">
-  <title>BookStore Microservice Gateway</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}BookVerse — Hiệu Sách Online{% endblock %}</title>
+  <meta name="description" content="BookVerse - Khám phá thế giới sách với hàng ngàn đầu sách chất lượng">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; margin: 32px; }
-    nav a { margin-right: 16px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 16px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top; }
-    form { margin-top: 16px; margin-bottom: 24px; }
-    input, select, textarea { margin: 4px 0; padding: 6px; width: 320px; max-width: 100%; }
-    textarea { min-height: 90px; }
-    button { padding: 8px 12px; }
-    .box { border: 1px solid #ddd; padding: 16px; margin-bottom: 20px; }
-    .code { background: #f5f5f5; padding: 8px; display: inline-block; }
-    pre { white-space: pre-wrap; word-break: break-word; }
+    /* ===== DESIGN SYSTEM ===== */
+    :root {
+      --bg-primary: #f5f7fa;
+      --bg-secondary: #ffffff;
+      --bg-card: rgba(255, 255, 255, 0.9);
+      --bg-glass: rgba(0,0,0,0.03);
+      --bg-glass-hover: rgba(0,0,0,0.06);
+      --surface: #eef1f6;
+      --surface-light: #e4e8f0;
+
+      --text-primary: #1a1a2e;
+      --text-secondary: #4a4a6a;
+      --text-muted: #8a8aaa;
+
+      --accent: #6c63ff;
+      --accent-light: #5a52e0;
+      --accent-glow: rgba(108,99,255,0.18);
+      --accent-warm: #e85d5d;
+      --accent-success: #22b861;
+      --accent-gold: #e8a820;
+      --accent-info: #3a9fbf;
+
+      --gradient-hero: linear-gradient(135deg, #eef1ff 0%, #f5f0ff 30%, #ede4ff 60%, #f5f7fa 100%);
+      --gradient-accent: linear-gradient(135deg, #6c63ff, #e040fb);
+      --gradient-card: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(248,248,255,0.9));
+      --gradient-warm: linear-gradient(135deg, #e85d5d, #d44a1a);
+
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 20px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.1);
+      --shadow-glow: 0 0 30px rgba(108,99,255,0.1);
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--accent-light); text-decoration: none; transition: var(--transition); }
+    a:hover { color: var(--accent); }
+
+    /* ===== NAVBAR ===== */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      padding: 0 2rem;
+    }
+    .navbar-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+    .nav-logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: var(--gradient-accent);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+    .nav-logo span { font-weight: 400; opacity: 0.7; }
+    .nav-links { display: flex; align-items: center; gap: 0.25rem; }
+    .nav-links a {
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: var(--transition);
+      position: relative;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--text-primary);
+      background: var(--bg-glass-hover);
+    }
+    .nav-links a.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 20px;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 1px;
+    }
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
+    .nav-cart {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      transition: var(--transition);
+    }
+    .nav-cart:hover { color: var(--text-primary); background: var(--bg-glass-hover); }
+    .nav-cart-icon { font-size: 1.2rem; }
+    .nav-user {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      background: var(--bg-glass);
+      border-radius: var(--radius-xl);
+      border: 1px solid rgba(0,0,0,0.08);
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      transition: var(--transition);
+    }
+    .nav-user:hover { border-color: var(--accent); color: var(--text-primary); }
+    .nav-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--gradient-accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700; color: #fff;
+    }
+
+    /* ===== MAIN ===== */
+    .main-content {
+      flex: 1;
+      max-width: 1280px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: var(--gradient-card);
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      transition: var(--transition);
+    }
+    .card:hover {
+      border-color: rgba(108,99,255,0.3);
+      box-shadow: var(--shadow-glow);
+      transform: translateY(-2px);
+    }
+
+    /* ===== BOOK CARD ===== */
+    .book-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1.5rem;
+    }
+    .book-card {
+      background: var(--gradient-card);
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: var(--transition);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+    }
+    .book-card:hover {
+      border-color: rgba(108,99,255,0.3);
+      box-shadow: var(--shadow-glow);
+      transform: translateY(-4px);
+    }
+    .book-cover {
+      height: 200px;
+      background: linear-gradient(135deg, var(--surface), var(--surface-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      color: var(--text-muted);
+      position: relative;
+      overflow: hidden;
+    }
+    .book-cover:not(.has-image)::before {
+      content: '📖';
+      font-size: 3.5rem;
+      opacity: 0.4;
+    }
+    .book-cover .stock-badge {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      padding: 0.25rem 0.7rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      z-index: 2;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    }
+    .stock-badge.in-stock { background: rgba(34,184,97,0.9); color: #fff; }
+    .stock-badge.out-of-stock { background: rgba(232,93,93,0.9); color: #fff; }
+    .book-info {
+      padding: 1.25rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .book-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .book-author {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+    .book-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+    }
+    .book-price {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--accent-warm);
+    }
+    .book-rating {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.85rem;
+      color: var(--accent-gold);
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.5rem;
+      border-radius: var(--radius-sm);
+      font-family: var(--font);
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: var(--gradient-accent);
+      color: #fff;
+      box-shadow: 0 4px 15px var(--accent-glow);
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 25px var(--accent-glow);
+      color: #fff;
+    }
+    .btn-secondary {
+      background: var(--bg-glass);
+      color: var(--text-primary);
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    .btn-secondary:hover {
+      background: var(--bg-glass-hover);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .btn-warm {
+      background: var(--gradient-warm);
+      color: #fff;
+    }
+    .btn-warm:hover { transform: translateY(-1px); color: #fff; }
+    .btn-sm { padding: 0.4rem 1rem; font-size: 0.8rem; }
+    .btn-block { width: 100%; }
+
+    /* ===== FORMS ===== */
+    .form-group { margin-bottom: 1rem; }
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 0.4rem;
+    }
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      background: var(--bg-glass);
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: var(--font);
+      font-size: 0.9rem;
+      transition: var(--transition);
+      outline: none;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .form-textarea { min-height: 100px; resize: vertical; }
+    .form-select option { background: #fff; color: var(--text-primary); }
+
+    /* ===== SECTION ===== */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .section-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* ===== STARS ===== */
+    .stars { color: var(--accent-gold); letter-spacing: 2px; }
+
+    /* ===== GENRE TAG ===== */
+    .genre-tag {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: var(--radius-xl);
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: rgba(108,99,255,0.1);
+      color: var(--accent);
+    }
+    .book-cover-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* ===== BADGES ===== */
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: var(--radius-xl);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    .badge-success { background: rgba(46,213,115,0.15); color: var(--accent-success); }
+    .badge-warning { background: rgba(255,192,72,0.15); color: var(--accent-gold); }
+    .badge-danger { background: rgba(255,107,107,0.15); color: var(--accent-warm); }
+    .badge-info { background: rgba(69,183,209,0.15); color: var(--accent-info); }
+
+    /* ===== TABLE ===== */
+    .table-modern {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    .table-modern th {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+    .table-modern td {
+      padding: 0.85rem 1rem;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      border-bottom: 1px solid rgba(0,0,0,0.04);
+    }
+    .table-modern tr:hover td { background: var(--bg-glass); }
+
+    /* ===== MESSAGE/ALERT ===== */
+    .alert {
+      padding: 1rem 1.25rem;
+      border-radius: var(--radius-md);
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+      border: 1px solid;
+    }
+    .alert-success {
+      background: rgba(46,213,115,0.08);
+      border-color: rgba(46,213,115,0.2);
+      color: var(--accent-success);
+    }
+    .alert-error {
+      background: rgba(255,107,107,0.08);
+      border-color: rgba(255,107,107,0.2);
+      color: var(--accent-warm);
+    }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      border-top: 1px solid rgba(0,0,0,0.06);
+      padding: 2rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    .footer a { color: var(--text-secondary); }
+    .footer a:hover { color: var(--accent-light); }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeInUp 0.5s ease-out forwards; }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .navbar { padding: 0 1rem; }
+      .nav-links { display: none; }
+      .main-content { padding: 1rem; }
+      .book-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
+      .section-title { font-size: 1.25rem; }
+    }
+
+    /* ===== PAGE-SPECIFIC BLOCKS ===== */
+    {% block extra_css %}{% endblock %}
   </style>
 </head>
 <body>
-  <h1>BookStore Microservice Gateway</h1>
-  <nav>
-    <a href="/">Home</a>
-    <a href="/books/">Manage Books</a>
-    <a href="/catalog/">Catalog</a>
-    <a href="/customers/">Customers</a>
-    <a href="/dashboard/">Dashboard</a>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="/" class="nav-logo">Book<span>Verse</span></a>
+      <div class="nav-links">
+        <a href="/" class="{% if request.path == '/' %}active{% endif %}">Trang chủ</a>
+        <a href="/catalog/" class="{% if '/catalog/' in request.path %}active{% endif %}">Danh mục</a>
+        {% if customer_id %}
+        <a href="/orders/{{ customer_id }}/" class="{% if '/orders/' in request.path %}active{% endif %}">Đơn hàng</a>
+        <a href="/recommendations/{{ customer_id }}/" class="{% if '/recommendations/' in request.path %}active{% endif %}">Gợi ý</a>
+        {% endif %}
+      </div>
+      <div class="nav-right">
+        {% if customer_id %}
+        <a href="/cart/{{ customer_id }}/" class="nav-cart">
+          <span class="nav-cart-icon">🛒</span>
+          <span>Giỏ hàng</span>
+        </a>
+        <a href="/customers/" class="nav-user">
+          <span class="nav-avatar">{{ customer_name|default:"U"|truncatechars:1 }}</span>
+          <span>{{ customer_name|default:"Khách" }}</span>
+        </a>
+        {% else %}
+        <a href="/customers/" class="btn btn-primary btn-sm">Đăng nhập</a>
+        {% endif %}
+      </div>
+    </div>
   </nav>
-  <hr>
-  {% block content %}{% endblock %}
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <p>© 2026 <strong>BookVerse</strong> — Hiệu sách trực tuyến. Nền tảng Microservice Architecture.</p>
+    <p style="margin-top:0.5rem;">
+      <a href="/books/">Staff Panel</a> · <a href="/dashboard/">Dashboard</a>
+    </p>
+  </footer>
 </body>
 </html>

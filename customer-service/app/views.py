@@ -51,6 +51,36 @@ class CustomerDetail(generics.RetrieveAPIView):
     serializer_class = CustomerSerializer
 
 
+class CustomerLogin(APIView):
+    """Authenticate customer by email + password."""
+
+    def post(self, request):
+        email = request.data.get('email', '').strip()
+        password = request.data.get('password', '')
+
+        if not email or not password:
+            return Response(
+                {'error': 'Email và mật khẩu không được để trống.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            customer = Customer.objects.get(email=email)
+        except Customer.DoesNotExist:
+            return Response(
+                {'error': 'Email không tồn tại trong hệ thống.'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        if customer.password != password:
+            return Response(
+                {'error': 'Mật khẩu không chính xác.'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        return Response(CustomerSerializer(customer).data, status=status.HTTP_200_OK)
+
+
 class HealthView(APIView):
     def get(self, request):
         return Response({'service': 'customer-service', 'status': 'ok'})
