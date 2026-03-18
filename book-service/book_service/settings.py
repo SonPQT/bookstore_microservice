@@ -14,6 +14,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'drf_spectacular',
     'app',
 ]
 
@@ -64,3 +65,22 @@ USE_I18N = True
 USE_TZ = True
 STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Book Service API',
+    'DESCRIPTION': (
+        'API quản lý sách trong hệ thống Bookstore Microservices.\n\n'
+        'Cung cấp các endpoint để:\n'
+        '- Xem danh sách và chi tiết sách\n'
+        '- Tạo, cập nhật, xóa sách\n'
+        '- Quản lý tồn kho (reserve / release stock)\n'
+        '- Kiểm tra trạng thái dịch vụ (health check)'
+    ),
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+}

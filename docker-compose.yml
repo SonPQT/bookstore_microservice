@@ -302,5 +302,14 @@ services:
         condition: service_started
       postgres-db:
         condition: service_healthy
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    container_name: swagger-ui
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./api-specs:/usr/share/nginx/html/api-specs
+    environment:
+      SWAGGER_JSON: /usr/share/nginx/html/api-specs/service-a.yaml
 volumes:
   postgres-data: null

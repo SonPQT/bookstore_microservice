@@ -1,0 +1,482 @@
+openapi: 3.0.3
+
+info:
+  title: Book Service API
+  description: |
+    API quản lý sách trong hệ thống **Bookstore Microservices**.
+
+    Cung cấp các chức năng:
+    - Xem danh sách và chi tiết sách
+    - Tạo, cập nhật, xóa sách (dành cho Staff)
+    - Quản lý tồn kho: đặt trước (reserve) và hoàn trả (release) stock
+    - Health check endpoint cho monitoring
+
+    **Base URL (local):** `http://localhost:8001`
+  version: "1.0.0"
+  contact:
+    name: Bookstore Dev Team
+
+servers:
+  - url: http://localhost:8001
+    description: Local development server (Docker)
+
+tags:
+  - name: Books
+    description: Quản lý thông tin sách
+  - name: Stock Management
+    description: Quản lý tồn kho sách (dùng nội bộ giữa các microservice)
+  - name: Health
+    description: Kiểm tra trạng thái dịch vụ
+
+paths:
+
+  /books/:
+    get:
+      tags: [Books]
+      summary: Lấy danh sách tất cả sách
+      description: Trả về danh sách sách, sắp xếp theo ID tăng dần.
+      operationId: listBooks
+      responses:
+        "200":
+          description: Danh sách sách thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Book"
+              example:
+                - id: 1
+                  title: "Clean Code"
+                  author: "Robert C. Martin"
+                  description: "A handbook of agile software craftsmanship."
+                  genre: "Technology"
+                  image_url: "https://example.com/clean-code.jpg"
+                  price: "25.00"
+                  stock: 10
+                  created_at: "2025-01-01T00:00:00Z"
+                  updated_at: "2025-03-10T08:30:00Z"
+
+    post:
+      tags: [Books]
+      summary: Tạo sách mới
+      description: Thêm một cuốn sách mới vào hệ thống.
+      operationId: createBook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookCreate"
+            example:
+              title: "The Pragmatic Programmer"
+              author: "David Thomas, Andrew Hunt"
+              description: "Your journey to mastery."
+              genre: "Technology"
+              image_url: "https://example.com/pragmatic.jpg"
+              price: "35.00"
+              stock: 20
+      responses:
+        "201":
+          description: Tạo sách thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+
+  /books/{id}/:
+    parameters:
+      - $ref: "#/components/parameters/BookId"
+
+    get:
+      tags: [Books]
+      summary: Lấy chi tiết một cuốn sách
+      description: Trả về thông tin chi tiết của sách theo ID.
+      operationId: retrieveBook
+      responses:
+        "200":
+          description: Thông tin sách
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    put:
+      tags: [Books]
+      summary: Cập nhật toàn bộ thông tin sách
+      description: Thay thế hoàn toàn thông tin của một cuốn sách (tất cả các field bắt buộc).
+      operationId: updateBook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookCreate"
+      responses:
+        "200":
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    patch:
+      tags: [Books]
+      summary: Cập nhật một phần thông tin sách
+      description: Cập nhật một hoặc nhiều field của sách. Chỉ cần cung cấp các field cần thay đổi.
+      operationId: partialUpdateBook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookPartialUpdate"
+            example:
+              price: "29.99"
+              stock: 15
+      responses:
+        "200":
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    delete:
+      tags: [Books]
+      summary: Xóa sách
+      description: Xóa vĩnh viễn một cuốn sách khỏi hệ thống.
+      operationId: deleteBook
+      responses:
+        "204":
+          description: Xóa thành công (không có nội dung trả về)
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /books/{id}/reserve/:
+    parameters:
+      - $ref: "#/components/parameters/BookId"
+
+    post:
+      tags: [Stock Management]
+      summary: Đặt trước tồn kho (Reserve)
+      description: |
+        Giảm số lượng tồn kho của sách khi có đơn hàng được đặt.
+
+        Sử dụng **SELECT FOR UPDATE** để đảm bảo tính nhất quán trong môi trường concurrent.
+
+        Trả về lỗi `400` nếu tồn kho không đủ.
+      operationId: reserveBookStock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StockAdjust"
+            example:
+              quantity: 2
+      responses:
+        "200":
+          description: Đặt trước thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StockOperationResult"
+              example:
+                message: "Stock reserved."
+                book:
+                  id: 1
+                  title: "Clean Code"
+                  stock: 8
+        "400":
+          description: Không đủ tồn kho
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDetail"
+              example:
+                error: "Not enough stock available."
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /books/{id}/release/:
+    parameters:
+      - $ref: "#/components/parameters/BookId"
+
+    post:
+      tags: [Stock Management]
+      summary: Hoàn trả tồn kho (Release)
+      description: |
+        Tăng số lượng tồn kho của sách khi đơn hàng bị hủy hoặc bị hoàn trả.
+
+        Sử dụng **SELECT FOR UPDATE** để đảm bảo tính nhất quán.
+      operationId: releaseBookStock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StockAdjust"
+            example:
+              quantity: 2
+      responses:
+        "200":
+          description: Hoàn trả thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StockOperationResult"
+              example:
+                message: "Stock released."
+                book:
+                  id: 1
+                  title: "Clean Code"
+                  stock: 10
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /health/:
+    get:
+      tags: [Health]
+      summary: Health check
+      description: Kiểm tra trạng thái hoạt động của Book Service. Dùng cho load balancer và monitoring.
+      operationId: healthCheck
+      responses:
+        "200":
+          description: Dịch vụ đang hoạt động bình thường
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+              example:
+                service: "book-service"
+                status: "ok"
+
+# ─── Components ──────────────────────────────────────────────────────────────
+
+components:
+
+  parameters:
+    BookId:
+      name: id
+      in: path
+      required: true
+      description: ID của sách (primary key)
+      schema:
+        type: integer
+        example: 1
+
+  schemas:
+
+    Book:
+      type: object
+      description: Thông tin đầy đủ của một cuốn sách (bao gồm cả read-only fields).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          description: ID tự động sinh (primary key)
+          example: 1
+        title:
+          type: string
+          maxLength: 255
+          description: Tên sách
+          example: "Clean Code"
+        author:
+          type: string
+          maxLength: 255
+          description: Tên tác giả
+          example: "Robert C. Martin"
+        description:
+          type: string
+          description: Mô tả nội dung sách
+          example: "A handbook of agile software craftsmanship."
+        genre:
+          type: string
+          maxLength: 100
+          description: Thể loại sách
+          example: "Technology"
+        image_url:
+          type: string
+          format: uri
+          maxLength: 500
+          description: URL ảnh bìa sách
+          example: "https://example.com/clean-code.jpg"
+        price:
+          type: string
+          format: decimal
+          description: Giá sách (đơn vị VND hoặc USD tùy cấu hình)
+          example: "25.00"
+        stock:
+          type: integer
+          minimum: 0
+          description: Số lượng tồn kho hiện tại
+          example: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Thời điểm tạo
+          example: "2025-01-01T00:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Thời điểm cập nhật gần nhất
+          example: "2025-03-10T08:30:00Z"
+
+    BookCreate:
+      type: object
+      description: Payload để tạo mới hoặc thay thế toàn bộ thông tin sách.
+      required:
+        - title
+        - author
+        - price
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          example: "Clean Code"
+        author:
+          type: string
+          maxLength: 255
+          example: "Robert C. Martin"
+        description:
+          type: string
+          default: ""
+          example: "A handbook of agile software craftsmanship."
+        genre:
+          type: string
+          maxLength: 100
+          default: ""
+          example: "Technology"
+        image_url:
+          type: string
+          format: uri
+          maxLength: 500
+          default: ""
+          example: "https://example.com/clean-code.jpg"
+        price:
+          type: string
+          format: decimal
+          example: "25.00"
+        stock:
+          type: integer
+          minimum: 0
+          default: 0
+          example: 10
+
+    BookPartialUpdate:
+      type: object
+      description: Payload để cập nhật một phần thông tin sách. Tất cả field đều tùy chọn.
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          example: "Clean Code"
+        author:
+          type: string
+          maxLength: 255
+          example: "Robert C. Martin"
+        description:
+          type: string
+          example: "A handbook of agile software craftsmanship."
+        genre:
+          type: string
+          maxLength: 100
+          example: "Technology"
+        image_url:
+          type: string
+          format: uri
+          maxLength: 500
+          example: "https://example.com/clean-code.jpg"
+        price:
+          type: string
+          format: decimal
+          example: "25.00"
+        stock:
+          type: integer
+          minimum: 0
+          example: 10
+
+    StockAdjust:
+      type: object
+      description: Payload điều chỉnh tồn kho.
+      required:
+        - quantity
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+          description: Số lượng cần tăng/giảm (phải >= 1)
+          example: 2
+
+    StockOperationResult:
+      type: object
+      description: Kết quả của thao tác reserve hoặc release stock.
+      properties:
+        message:
+          type: string
+          example: "Stock reserved."
+        book:
+          $ref: "#/components/schemas/Book"
+
+    HealthStatus:
+      type: object
+      properties:
+        service:
+          type: string
+          example: "book-service"
+        status:
+          type: string
+          enum: [ok, degraded, down]
+          example: "ok"
+
+    ErrorDetail:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Not enough stock available."
+
+    ValidationError:
+      type: object
+      description: Lỗi validation từ DRF (field-level errors).
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      example:
+        price: ["A valid number is required."]
+        quantity: ["Ensure this value is greater than or equal to 1."]
+
+  responses:
+    NotFound:
+      description: Không tìm thấy tài nguyên
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorDetail"
+          example:
+            error: "Book not found."
+
+    ValidationError:
+      description: Dữ liệu đầu vào không hợp lệ
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ValidationError"
